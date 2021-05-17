@@ -16,8 +16,6 @@ import (
 	"time"
 )
 
-const MaxBlockSize = 64 * 1024 * 1024
-
 var (
 	op        string
 	blockSize int
@@ -33,7 +31,7 @@ var (
 func parseArgs() {
 	op = os.Args[1]
 	commandLine := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
-	commandLine.IntVar(&blockSize, "blocksize", MaxBlockSize, "Block size")
+	commandLine.IntVar(&blockSize, "blocksize", 32*1024*1024, "Block size")
 	commandLine.StringVar(&fileName, "filename", "", "File name")
 	commandLine.IntVar(&fileSize, "filesize", 0, "File size")
 	commandLine.IntVar(&port, "port", 0, "Port to listen")
@@ -104,6 +102,7 @@ func encrypt(s []byte) {
 func printStats() {
 	const LEN = 30
 	ht := []int{}
+	tot := 0
 	for {
 		time.Sleep(time.Second)
 		sum := 0
@@ -111,6 +110,7 @@ func printStats() {
 			t := <-blockTransfer
 			sum += t
 		}
+		tot += sum
 		if len(ht) < LEN {
 			ht = append(ht, sum)
 		} else {
@@ -121,7 +121,7 @@ func printStats() {
 			sum += ht[i]
 		}
 		spd := float64(sum) / float64(len(ht)) / 1024 / 1024
-		fmt.Printf("%s speed: %.2fMB/s\n", op, spd)
+		fmt.Printf("%s %.2fGB, speed: %.2fMB/s\n", op, float64(tot)/1073741824, spd)
 	}
 }
 
